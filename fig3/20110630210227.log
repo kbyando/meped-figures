@@ -1,0 +1,37 @@
+Log File for Generation of 20110630210227.eps/txt
+IDL Version: 7.1
+ROUTINE(0): analysis/../fingerprint_plotraw.pro
+       PATH: analysis/../fingerprint_plotraw.pro
+       SIZE:                   3688 (Bytes)
+       LAST MODIFIED: Thu Jun 30 21:02:18 2011
+ROUTINE(1): analysis/g4_plotraw.pro
+       PATH: analysis/g4_plotraw.pro
+       SIZE:                   7291 (Bytes)
+       LAST MODIFIED: Fri Jun 24 16:59:16 2011
+ROUTINE(2): analysis/g4_fingerprint.pro
+       PATH: analysis/g4_fingerprint.pro
+       SIZE:                   1784 (Bytes)
+       LAST MODIFIED: Tue Jun 28 17:26:31 2011
+ROUTINE(3): analysis/g4_load2x.pro
+       PATH: analysis/g4_load2x.pro
+       SIZE:                   4255 (Bytes)
+       LAST MODIFIED: Fri Jun 24 16:59:16 2011
+ROUTINE(4): analysis/g4_binhits.pro
+       PATH: analysis/g4_binhits.pro
+       SIZE:                   4285 (Bytes)
+       LAST MODIFIED: Fri Jun 24 16:59:16 2011
+ROUTINE(5): analysis/sem2_loadct.pro
+       PATH: analysis/sem2_loadct.pro
+       SIZE:                   2436 (Bytes)
+       LAST MODIFIED: Fri Jun 24 16:59:23 2011
+COMPILED ROUTINES: $MAIN$ FINGERPRINT_PLOTRAW G4_PLOTRAW LOAD_G4_LIB SEM2_LOADCT
+
+Log File (continued by ../fingerprint_plotraw.pro):
+
+INPUT DATA (source files): 
+{ g4_data/binary/support/ptel_p10.0keV_3427327.bin
+g4_data/binary/support/ptel_e10.0keV_3427328.bin
+      -1
+MEPED p-tel Validation       1}
+
+Compiled Routines: $MAIN$ BINREAD FINGERPRINT_PLOTRAW G4_PLOTRAW LOADCT LOAD_G4_LIB SEM2_LOADCT

@@ -1,0 +1,97 @@
+PRO fingerprint_plotraw
+
+; expected routine usage
+this_file = '../fingerprint_plotraw.pro'	;(this file)
+pri_procs = 'g4_plotraw.pro'		;(primary procedure)
+aux_funcs = ['g4_fingerprint.pro', $		;(auxiliary functions)
+	'g4_load2x.pro', 'g4_binhits.pro', 'sem2_loadct.pro']
+routine_path = 'analysis/'		;(routine path)
+
+; fingerprint everything (returns file path for session LOG FILE)
+hashstem = G4_FINGERPRINT(routine_path + [this_file, pri_procs, aux_funcs])
+
+; journal to log
+OPENU, fileID, (hashstem + '.log'), /GET_LUN, /APPEND
+PRINTF, fileID, 'Log File (continued by ' + this_file + '):'
+PRINTF, fileID, ''
+
+
+
+; ----------------------------------------------------
+; Input Data (if applicable, copy from SET_MEPED_VARS)
+; ----------------------------------------------------
+; set_meped_vars
+; Usage: IDL> @set_meped_vars
+;
+;
+; data files - MEPED Proton Telescope
+ptel_vpfiles = ['g4_data/binary/support/ptel_p10.0keV_3427327.bin']
+ptel_vefiles = ['g4_data/binary/support/ptel_e10.0keV_3427328.bin']
+  ; pack into structure
+ptel_v = {pfiles:ptel_vpfiles, efiles:ptel_vefiles, afiles:[-1], description:'MEPED p-tel Validation', typeCode:1}
+;
+;
+; data files - MEPED Electron Telescope
+; NONE
+;
+; ----------------------------------------------------
+PRINTF, fileID, 'INPUT DATA (source files): '
+PRINTF, fileID, ptel_v
+PRINTF, fileID, ''
+; ----------------------------------------------------
+; ----------------------------------------------------
+
+
+
+; *********************************************************************
+; Execute Procedure
+; *********************************************************************
+ psFlag = 1
+ IF psFlag THEN BEGIN      ; for EPS output
+        SET_PLOT, 'PS'
+        DEVICE, COLOR=1, BITS_PER_PIXEL=8, XSIZE=5.0, YSIZE=5.5, /INCHES
+        DEVICE, FILENAME=hashstem+'.eps', ENCAPSULATED=1, $
+                PREVIEW=1
+        !P.CHARSIZE=1.0
+ ENDIF ELSE !P.CHARSIZE=1
+; ----------------------------------------------------
+
+; windowing settings, load color table, paint color bar / legend
+!P.MULTI = [0,1,1]
+SEM2_LOADCT
+;FSC_COLORBAR, /VERTICAL, POSITION=[0.10, 0.97, 0.90, 0.99]
+!P.MULTI = [1,1,1,1,0]
+
+; plot settings
+;        PSYMI:[3,-3,-3,-3,-3,-3,-3], COLORI:20.*[12.75,1,2,3,4,5,6]})
+ps_generic = {TITLE:'!6', SUBTITLE:'', XTITLE:'Incident Particle Energy [keV]', $
+        YTITLE:'Deposited Energy [keV]', XLOG:[1], YLOG:[1], $
+        XRANGE:[10,10000], XMARGIN:[10,5], YRANGE:[10,10000]}
+
+; ----------------------------------------------------
+  ; plot one (with overplots)
+PLOT, [10,10000], [10,10000], /NODATA, _EXTRA=ps_generic
+G4_PLOTRAW, ptel_v, RAW=[0,1], COLOR=100, /NOERASE, _EXTRA=ps_generic
+G4_PLOTRAW, ptel_v, RAW=[0,2], COLOR=60, /NOERASE, _EXTRA=ps_generic
+G4_PLOTRAW, ptel_v, RAW=[0,1], COLOR=180, /NOERASE, _EXTRA=ps_generic, /ELECTRONS
+        ; G4_PLOTRAW, ptel_v, RAW=[0,2], COLOR=110
+PLOT, [10,10000], [10,10000], /NODATA, _EXTRA=ps_generic, /NOERASE
+OPLOT, [10,10000], [21.4, 21.4], LINESTYLE=2, THICK=2
+OPLOT, [10,10000], [70.7, 70.7], LINESTYLE=2, THICK=2
+OPLOT, [10,10000], [243., 243.], LINESTYLE=2, THICK=2
+OPLOT, [10,10000], [796., 796.], LINESTYLE=2, THICK=2
+OPLOT, [10,10000], [2498., 2498.], LINESTYLE=2, THICK=2
+
+  ; plot RHS labels
+  XYOUTS, 0.96, 0.75, 'D1', ALIGNMENT=0.5, /NORMAL, COLOR=100
+  XYOUTS, 0.96, 0.8, 'D2', ALIGNMENT=0.5, /NORMAL, COLOR=60
+  XYOUTS, 0.96, 0.3, 'D1', ALIGNMENT=0.5, /NORMAL, COLOR=180
+; *********************************************************************
+; *********************************************************************
+        DEVICE, /CLOSE
+        SET_PLOT, 'X'
+
+; Close Log File
+PRINTF, fileID, 'Compiled Routines: ' + StrJoin(ROUTINE_INFO(), ' ')
+FREE_LUN, fileID
+END

@@ -1,0 +1,132 @@
+PRO fingerprint_plotgf__etel3
+
+; expected routine usage
+this_file = '../fingerprint_plotgf__etel3.pro'	;(this file)
+pri_procs = 'g4_plotgfb.pro'		;(primary procedure)
+aux_funcs = ['g4_fingerprint.pro', $		;(auxiliary functions)
+	'g4_load2x.pro', 'g4_calcgfb.pro', 'g4_binhits.pro', 'sem2_loadct.pro']
+routine_path = 'analysis/'		;(routine path)
+
+; fingerprint everything (returns file path for session LOG FILE)
+hashstem = G4_FINGERPRINT(routine_path + [this_file, pri_procs, aux_funcs])
+
+; journal to log
+OPENU, fileID, (hashstem + '.log'), /GET_LUN, /APPEND
+PRINTF, fileID, 'Log File (continued by ' + this_file + '):'
+PRINTF, fileID, ''
+
+
+
+; ----------------------------------------------------
+; Input Data (if applicable, copy from SET_MEPED_VARS)
+; ----------------------------------------------------
+; set_meped_vars
+; Usage: IDL> @set_meped_vars
+;
+;
+; data files - MEPED Proton Telescope
+ptel_pfiles = [$ 
+        'g4_data/binary/ptel_p10.0keV_3389440.bin', $
+        'g4_data/binary/ptel_p100.0keV_3389441.bin', $
+        'g4_data/binary/ptel_p1.0MeV_3389442.bin', $
+        'g4_data/binary/ptel_p9.0MeV_3401081.bin', $
+        'g4_data/binary/ptel_p10.0MeV_3389443.bin']
+ptel_efiles = [$
+        'g4_data/binary/ptel_e10.0keV_3389430.bin', $
+        'g4_data/binary/ptel_e40.0keV_3407990.bin', $
+        'g4_data/binary/ptel_e60.0keV_3407991.bin', $
+        'g4_data/binary/ptel_e80.0keV_3408604.bin', $
+        'g4_data/binary/ptel_e100.0keV_3389434.bin', $
+        'g4_data/binary/ptel_e400.0keV_3389435.bin', $
+        'g4_data/binary/ptel_e700.0keV_3389436.bin', $
+        'g4_data/binary/ptel_e1.0MeV_3389437.bin', $
+        'g4_data/binary/ptel_e4.0MeV_3389438.bin', $
+        'g4_data/binary/ptel_e7.0MeV_3389439.bin']
+  ; pack into structure
+ptel = {pfiles:ptel_pfiles, efiles:ptel_efiles, afiles:[-1], description:'MEPED Proton Telescope', typeCode:1}
+;
+;
+; data files - MEPED Electron Telescope
+etel_pfiles = [$
+	'g4_data/binary/etel_p10.0keV_10376.bin',  $
+	'g4_data/binary/etel_p100.0keV_10377.bin', $        
+	'g4_data/binary/etel_p1.0MeV_10378.bin']
+etel_efiles = [$
+	'g4_data/binary/etel_e10.0keV_10383.bin', $
+	'g4_data/binary/etel_e100.0keV_10379.bin',$
+	'g4_data/binary/etel_e1.0MeV_10380.bin',  $
+	'g4_data/binary/etel_e4.0MeV_10381.bin',  $
+	'g4_data/binary/etel_e7.0MeV_10382.bin']
+  ; pack into structure
+etel = {pfiles:etel_pfiles, efiles:etel_efiles, afiles:[-1], description:'MEPED Electron Telescope', typeCode:2}
+;
+; ----------------------------------------------------
+PRINTF, fileID, 'INPUT DATA (source files): '
+PRINTF, fileID, ptel
+PRINTF, fileID, etel
+PRINTF, fileID, ''
+; ----------------------------------------------------
+; ----------------------------------------------------
+
+
+
+; *********************************************************************
+; Execute Procedure
+; *********************************************************************
+ psFlag = 1
+ IF psFlag THEN BEGIN      ; for EPS output
+        SET_PLOT, 'PS'
+        DEVICE, COLOR=1, BITS_PER_PIXEL=8
+        DEVICE, FILENAME=hashstem+'.eps', ENCAPSULATED=1, $
+                PREVIEW=1
+        !P.CHARSIZE=1.0
+ ENDIF ELSE !P.CHARSIZE=1
+; ----------------------------------------------------
+
+; windowing settings, load color table, paint color bar / legend
+!P.MULTI = [0,1,1]
+SEM2_LOADCT
+;FSC_COLORBAR, /VERTICAL, POSITION=[0.10, 0.97, 0.90, 0.99]
+!P.MULTI = [3,1,3,1,0]
+
+; plot settings
+ps_generic = {TITLE:'!6', SUBTITLE:'', XRANGE:[10,10000], XMARGIN:[10,10], ENERGY_REBIN:4L, YRANGE:[10.^(-5),0.1]}
+ps_total_gf = CREATE_STRUCT(ps_generic, {ERR:1, PSYMI:[10], THICKI:[2], COLORI:20*[10]})
+ps_chan_gf = CREATE_STRUCT(ps_generic, {NOOVERLAY:1, FFIX:1, THICKI:[3], $
+        PSYMI:[3,-3,-3,-3,3,3,3], COLORI:20.*[12.75,7,8,9,12.75,12.75,12.75]})
+
+; ----------------------------------------------------
+  ; plot one (upper pane)
+G4_PLOTGFB, etel, _EXTRA=ps_total_gf, YSTYLE=8
+AXIS, YAXIS=1, YRANGE = 10.^(!Y.CRANGE) * (1.e9/(4.*(!pi^2)*3.5^2)), YSTYLE=1, YTITLE='Counts n', YTICKLEN=-0.02
+  ; plot two (middle pane)
+G4_PLOTGFB, etel, _EXTRA=ps_chan_gf, /PCHAN, XTITLE='Incident PROTON Energy [keV]'
+OPLOT, [10., 10000.], [0.01, 0.01], LINESTYLE=2
+  ; plot three (lower pane)
+G4_PLOTGFB, etel, _EXTRA=ps_chan_gf, /ECHAN, XTITLE='Incident ELECTRON Energy [keV]'
+OPLOT, [10., 10000.], [0.01, 0.01], LINESTYLE=2
+
+  ; plot RHS labels
+intv = 27L
+channels = ['E1', 'E2', 'E3', '', '', '']
+FOR i=0,5 DO BEGIN
+  XYOUTS, 0.97, (16. - Float(i))/intv, channels[i], ALIGNMENT=0.5, /NORMAL, $
+        COLOR=20*(i MOD(intv/3) + 7)
+  XYOUTS, 0.97, (7. - Float(i))/intv, channels[i], ALIGNMENT=0.5, /NORMAL, $
+        COLOR=20*(i MOD(intv/3) + 7)
+ENDFOR
+XYOUTS, 0.1, (25.25/27.), '(a)', /NORMAL, ALIGNMENT=0.5
+XYOUTS, 0.1, (16.25/27.), '(b)', /NORMAL, ALIGNMENT=0.5
+XYOUTS, 0.1, (7.25/27.), '(c)', /NORMAL, ALIGNMENT=0.5
+
+XYOUTS, 0.20, (25./27.), 'electrons', /NORMAL, ALIGNMENT=0.5
+XYOUTS, 0.30, (21./27.), 'protons', /NORMAL, ALIGNMENT=0.5
+; *********************************************************************
+; *********************************************************************
+        DEVICE, /CLOSE
+        SET_PLOT, 'X'
+
+; Close Log File
+PRINTF, fileID, 'Compiled Routines: ' + StrJoin(ROUTINE_INFO(), ' ')
+FREE_LUN, fileID
+END

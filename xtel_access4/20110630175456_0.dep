@@ -1,0 +1,185 @@
+FUNCTION plot_fov, xtel_yspecies, INDICES=range, _REF_EXTRA=pass_thru
+
+  ; check for validity
+  input_size = SIZE(xtel_yspecies)
+  IF input_size[0] NE 2 THEN $
+        RETURN, -1 $
+  ELSE BEGIN
+        IF input_size[1] NE 6 THEN RETURN, -1
+        IF ~KEYWORD_SET(range) THEN range=LIndGen(input_size[2])
+  ENDELSE
+
+  energy_centers = (xtel_yspecies[0,range] + xtel_yspecies[1,range])/2.
+
+  ; calculate and plot "% aperture hits"
+  oplot, energy_centers, (xtel_yspecies[3,range]/xtel_yspecies[2,range])*100., LINESTYLE=0, _EXTRA=pass_thru
+  ; calculate and plot "% 15-degree aperture hits"
+  oplot, energy_centers, (xtel_yspecies[4,range]/xtel_yspecies[2,range])*100., LINESTYLE=2, _EXTRA=pass_thru
+
+  RETURN, 1                     ;(if successful, return TRUE)
+END
+
+
+PRO fingerprint_plotfovs
+
+; expected routine usage
+this_file = '../fingerprint_plotfovs.pro'	;(this file)
+pri_procs = 'g4_tablefovstats.pro'		;(primary procedure)
+aux_funcs = ['g4_fingerprint.pro', $		;(auxiliary functions)
+	'g4_load2x.pro', 'sem2_loadct.pro', $
+	'g4_bin_by_energy.pro', $
+	'g4_trace2aper.pro', $
+	'g4_tracefov.pro', $
+	'g4_calctheta.pro', $
+	'g4_histangle.pro']
+routine_path = 'analysis/'		;(routine path)
+
+; fingerprint everything (returns file path for session LOG FILE)
+hashstem = G4_FINGERPRINT(routine_path + [this_file, pri_procs, aux_funcs])
+
+; journal to log
+OPENU, fileID, (hashstem + '.log'), /GET_LUN, /APPEND
+PRINTF, fileID, 'Log File (continued by ' + this_file + '):'
+PRINTF, fileID, ''
+
+
+
+; ----------------------------------------------------
+; Input Data (if applicable, copy from SET_MEPED_VARS)
+; ----------------------------------------------------
+; set_meped_vars
+; Usage: IDL> @set_meped_vars
+;
+;
+; data files - MEPED Proton Telescope
+ptel_pfiles = [$ 
+        'g4_data/binary/ptel_p10.0keV_3389440.bin', $
+        'g4_data/binary/ptel_p100.0keV_3389441.bin', $
+        'g4_data/binary/ptel_p1.0MeV_3389442.bin', $
+        'g4_data/binary/ptel_p9.0MeV_3401081.bin', $
+        'g4_data/binary/ptel_p10.0MeV_3389443.bin']
+ptel_efiles = [$
+        'g4_data/binary/ptel_e10.0keV_3389430.bin', $
+        'g4_data/binary/ptel_e40.0keV_3407990.bin', $
+        'g4_data/binary/ptel_e60.0keV_3407991.bin', $
+        'g4_data/binary/ptel_e80.0keV_3408604.bin', $
+        'g4_data/binary/ptel_e100.0keV_3389434.bin', $
+        'g4_data/binary/ptel_e400.0keV_3389435.bin', $
+        'g4_data/binary/ptel_e700.0keV_3389436.bin', $
+        'g4_data/binary/ptel_e1.0MeV_3389437.bin', $
+        'g4_data/binary/ptel_e4.0MeV_3389438.bin', $
+        'g4_data/binary/ptel_e7.0MeV_3389439.bin']
+  ; pack into structure
+ptel = {pfiles:ptel_pfiles, efiles:ptel_efiles, afiles:[-1], description:'MEPED Proton Telescope', typeCode:1}
+;
+;
+; data files - MEPED Electron Telescope
+etel_pfiles = [$
+	'g4_data/binary/etel_p10.0keV_10376.bin',  $
+	'g4_data/binary/etel_p100.0keV_10377.bin', $        
+	'g4_data/binary/etel_p1.0MeV_10378.bin']
+etel_efiles = [$
+	'g4_data/binary/etel_e10.0keV_10383.bin', $
+	'g4_data/binary/etel_e100.0keV_10379.bin',$
+	'g4_data/binary/etel_e1.0MeV_10380.bin',  $
+	'g4_data/binary/etel_e4.0MeV_10381.bin',  $
+	'g4_data/binary/etel_e7.0MeV_10382.bin']
+  ; pack into structure
+etel = {pfiles:etel_pfiles, efiles:etel_efiles, afiles:[-1], description:'MEPED Electron Telescope', typeCode:2}
+;
+; ----------------------------------------------------
+PRINTF, fileID, 'INPUT DATA (source files): '
+PRINTF, fileID, ptel
+PRINTF, fileID, etel
+PRINTF, fileID, ''
+; ----------------------------------------------------
+; ----------------------------------------------------
+
+
+
+; *********************************************************************
+; Execute Procedure
+; *********************************************************************
+ psFlag = 1
+ IF psFlag THEN BEGIN      ; for EPS output
+        SET_PLOT, 'PS'
+        DEVICE, COLOR=1, BITS_PER_PIXEL=8, XSIZE=3.5, YSIZE=4., /INCHES
+        DEVICE, FILENAME=hashstem+'.eps', ENCAPSULATED=1, $
+                PREVIEW=1
+	!P.CHARSIZE=0.75
+ ENDIF ELSE !P.CHARSIZE=1
+; ----------------------------------------------------
+
+  ; windowing settings, load color table, paint color bar / legend
+!P.MULTI = [0,1,1]
+SEM2_LOADCT
+
+; build stat tables
+ptel_pr = G4_TABLEFOVSTATS(ptel, /PR, ENERGY_REBIN=9)
+ptel_el = G4_TABLEFOVSTATS(ptel, /EL, ENERGY_REBIN=9)
+etel_pr = G4_TABLEFOVSTATS(etel, /PR, ENERGY_REBIN=9)
+etel_el = G4_TABLEFOVSTATS(etel, /EL, ENERGY_REBIN=9)
+
+!P.MULTI=[0,1,1,0,0]
+
+plt_template = {XLOG:1, XSTYLE:8, YSTYLE:9, XRANGE:[10.,10000.]}
+pr_template = CREATE_STRUCT(plt_template, {XTICKNAME:REPLICATE(' ',4), YTICKS:2, XTICKLEN:0.2})
+el_template = CREATE_STRUCT(plt_template);, {XTITLE:'Incident Particle Energy (keV)'})
+
+; positioning variables (normalized)
+v_lower = 0.10                          ;(vertical lower limit) 
+v_upper = 0.92                          ;(vertical upper limit)
+v_divider = 0.81                        ;(vertical divider placement)
+vd_width = 0.01                         ;(half-width of vertical divider)
+
+h_left = 0.15                           ;(horizontal left limit)
+h_right = 0.95                          ;(horizontal right limit)
+h_divider = (h_left + h_right)/2.       ;(horizontal divider placement)
+hd_width = 0.05                         ;(half-width of horizontal divider)
+
+; initalize plot window
+XYOUTS, 0,0, '!6'
+; plot each of these in turn (general method)
+PLOT, [10., 10000.], [90., 100.1], /NODATA, _EXTRA=pr_template, $
+        TITLE='Proton Telescope', YTITLE='PROTONS', $
+        POSITION=[h_left, (v_divider+vd_width), (h_divider-hd_width), v_upper]
+plot1 = plot_fov(ptel_pr, COLOR=185, THICK=2)
+
+PLOT, [10., 10000.], [0., 100.01], /NODATA, _EXTRA=el_template, /NOERASE, $
+        YTITLE='FOV Access (% total counts)!CELECTRONS', $
+        POSITION=[h_left, v_lower, (h_divider-hd_width), (v_divider-vd_width)]
+OPLOT, [10., 10000.], [90., 90.], LINESTYLE=1
+plot2 = plot_fov(ptel_el, COLOR=185, THICK=2)
+
+PLOT, [10., 10000.], [90., 100.1], /NODATA, _EXTRA=pr_template, /NOERASE, $
+        TITLE='Electron Telescope', $
+        POSITION=[(h_divider+hd_width), (v_divider+vd_width), h_right, v_upper]
+plot3 = plot_fov(etel_pr, COLOR=185, THICK=2)
+
+PLOT, [10., 10000.], [0., 100.01], /NODATA, _EXTRA=el_template, /NOERASE, $
+        POSITION=[(h_divider+hd_width), v_lower, h_right, (v_divider-vd_width)]
+        ;YTITLE='ELECTRONS', $
+OPLOT, [10., 10000.], [90., 90.], LINESTYLE=1
+plot4 = plot_fov(etel_el, COLOR=185, THICK=2)
+
+; labelling
+XYOUTS, h_divider, 0.02, 'Incident Particle Energy (keV)', ALIGNMENT=0.5, /NORMAL
+XYOUTS, h_left+hd_width, v_upper-3*vd_width, '(a)', ALIGNMENT=0.5, /NORMAL
+XYOUTS, h_divider+2*hd_width, v_upper-3*vd_width, '(b)', ALIGNMENT=0.5, /NORMAL
+XYOUTS, h_left+hd_width, v_divider-12*vd_width, '(c)', ALIGNMENT=0.5, /NORMAL
+XYOUTS, h_divider+2*hd_width, v_divider-12*vd_width, '(d)', ALIGNMENT=0.5, /NORMAL
+OPLOT, [20,100], [15,15], LINESTYLE=0
+  XYOUTS, 200, 14, 'via aperture'
+OPLOT, [20,100], [10,10], LINESTYLE=2
+  XYOUTS, 200, 9, 'FOV derived'
+; *********************************************************************
+; *********************************************************************
+IF psFlag THEN BEGIN
+        DEVICE, /CLOSE
+        SET_PLOT, 'X'
+ENDIF 
+
+PRINTF, fileID, 'Compiled Routines: ' + StrJoin(ROUTINE_INFO(), ' ')
+FREE_LUN, fileID
+
+END

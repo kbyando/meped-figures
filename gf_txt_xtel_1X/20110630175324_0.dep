@@ -1,0 +1,106 @@
+PRO fingerprint_printgf
+
+; expected routine usage
+this_file = '../fingerprint_printgf.pro'	;(this file)
+pri_procs = '../g4_printgfc.pro'		;(primary procedure)
+aux_funcs = ['g4_fingerprint.pro', $		;(auxiliary functions)
+	'g4_load2x.pro', 'g4_calcgfb.pro', 'g4_binhits.pro']
+routine_path = 'analysis/'		;(routine path)
+
+; fingerprint everything (returns file path for session LOG FILE)
+hashstem = G4_FINGERPRINT(routine_path + [this_file, pri_procs, aux_funcs])
+
+; journal to log
+OPENU, fileID, (hashstem + '.log'), /GET_LUN, /APPEND
+PRINTF, fileID, 'Log File (continued by ' + this_file + '):'
+PRINTF, fileID, ''
+
+
+
+; ----------------------------------------------------
+; Input Data (if applicable, copy from SET_MEPED_VARS)
+; ----------------------------------------------------
+; set_meped_vars
+; Usage: IDL> @set_meped_vars
+;
+;
+; data files - MEPED Proton Telescope
+ptel_pfiles = [$ 
+        'g4_data/binary/ptel_p10.0keV_3389440.bin', $
+        'g4_data/binary/ptel_p100.0keV_3389441.bin', $
+        'g4_data/binary/ptel_p1.0MeV_3389442.bin', $
+        'g4_data/binary/ptel_p9.0MeV_3401081.bin', $
+        'g4_data/binary/ptel_p10.0MeV_3389443.bin']
+ptel_efiles = [$
+        'g4_data/binary/ptel_e10.0keV_3389430.bin', $
+        'g4_data/binary/ptel_e40.0keV_3407990.bin', $
+        'g4_data/binary/ptel_e60.0keV_3407991.bin', $
+        'g4_data/binary/ptel_e80.0keV_3408604.bin', $
+        'g4_data/binary/ptel_e100.0keV_3389434.bin', $
+        'g4_data/binary/ptel_e400.0keV_3389435.bin', $
+        'g4_data/binary/ptel_e700.0keV_3389436.bin', $
+        'g4_data/binary/ptel_e1.0MeV_3389437.bin', $
+        'g4_data/binary/ptel_e4.0MeV_3389438.bin', $
+        'g4_data/binary/ptel_e7.0MeV_3389439.bin']
+  ; pack into structure
+ptel = {pfiles:ptel_pfiles, efiles:ptel_efiles, afiles:[-1], description:'MEPED Proton Telescope', typeCode:1}
+;
+;
+; data files - MEPED Electron Telescope
+etel_pfiles = [$
+	'g4_data/binary/etel_p10.0keV_10376.bin',  $
+	'g4_data/binary/etel_p100.0keV_10377.bin', $        
+	'g4_data/binary/etel_p1.0MeV_10378.bin']
+etel_efiles = [$
+	'g4_data/binary/etel_e10.0keV_10383.bin', $
+	'g4_data/binary/etel_e100.0keV_10379.bin',$
+	'g4_data/binary/etel_e1.0MeV_10380.bin',  $
+	'g4_data/binary/etel_e4.0MeV_10381.bin',  $
+	'g4_data/binary/etel_e7.0MeV_10382.bin']
+  ; pack into structure
+etel = {pfiles:etel_pfiles, efiles:etel_efiles, afiles:[-1], description:'MEPED Electron Telescope', typeCode:2}
+;
+; ----------------------------------------------------
+PRINTF, fileID, 'INPUT DATA (source files): '
+PRINTF, fileID, ptel
+PRINTF, fileID, etel
+PRINTF, fileID, ''
+; ----------------------------------------------------
+; ----------------------------------------------------
+
+
+
+; *********************************************************************
+; Execute Procedure
+; *********************************************************************
+
+; ** NOT A GRAPHICAL ROUTINE **
+; Open an output file:
+OPENW, fileID2, (hashstem + '.txt'), /GET_LUN
+  PRINTF, fileID2, 'LATEX OUTPUT (' + hashstem + '.txt)'
+  PRINTF, fileID2, '%'
+
+  ; ----------------------------------------------------
+  G4_PRINTGFC, ptel, /PCHAN, COLUMNS=[0,3,4,5,6,7,8,9,10], ENERGY_REBIN=1L, /LATEX, OUTPUTSTREAM=fileID2
+  PRINTF, fileID2, '%'
+  PRINTF, fileID2, '%'
+
+  G4_PRINTGFC, ptel, /ECHAN, COLUMNS=[0,3,4,5,6,7,8,9,10], ENERGY_REBIN=1L, /LATEX, OUTPUTSTREAM=fileID2
+  PRINTF, fileID2, '%'
+  PRINTF, fileID2, '%'
+
+  G4_PRINTGFC, etel, /PCHAN, COLUMNS=[0,3,4,5,9,10], ENERGY_REBIN=1L, /LATEX, OUTPUTSTREAM=fileID2
+  PRINTF, fileID2, '%'
+  PRINTF, fileID2, '%'
+ 
+  G4_PRINTGFC, etel, /ECHAN, COLUMNS=[0,3,4,5,9,10], ENERGY_REBIN=1L, /LATEX, OUTPUTSTREAM=fileID2
+  PRINTF, fileID2, '%'
+  ; ----------------------------------------------------
+
+FREE_LUN, fileID2
+; *********************************************************************
+
+PRINTF, fileID, 'Compiled Routines: ' + StrJoin(ROUTINE_INFO(), ' ')
+FREE_LUN, fileID
+
+END

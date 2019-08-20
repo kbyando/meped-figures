@@ -1,0 +1,71 @@
+Log File for Generation of 20110630175456.eps/txt
+IDL Version: 7.1
+ROUTINE(0): analysis/../fingerprint_plotfovs.pro
+       PATH: analysis/../fingerprint_plotfovs.pro
+       SIZE:                   7297 (Bytes)
+       LAST MODIFIED: Thu Jun 30 16:05:20 2011
+ROUTINE(1): analysis/g4_tablefovstats.pro
+       PATH: analysis/g4_tablefovstats.pro
+       SIZE:                   7962 (Bytes)
+       LAST MODIFIED: Thu Jun 30 15:58:21 2011
+ROUTINE(2): analysis/g4_fingerprint.pro
+       PATH: analysis/g4_fingerprint.pro
+       SIZE:                   1784 (Bytes)
+       LAST MODIFIED: Tue Jun 28 17:26:31 2011
+ROUTINE(3): analysis/g4_load2x.pro
+       PATH: analysis/g4_load2x.pro
+       SIZE:                   4255 (Bytes)
+       LAST MODIFIED: Fri Jun 24 16:59:16 2011
+ROUTINE(4): analysis/sem2_loadct.pro
+       PATH: analysis/sem2_loadct.pro
+       SIZE:                   2436 (Bytes)
+       LAST MODIFIED: Fri Jun 24 16:59:23 2011
+ROUTINE(5): analysis/g4_bin_by_energy.pro
+       PATH: analysis/g4_bin_by_energy.pro
+       SIZE:                   1059 (Bytes)
+       LAST MODIFIED: Fri Jun 24 16:59:16 2011
+ROUTINE(6): analysis/g4_trace2aper.pro
+       PATH: analysis/g4_trace2aper.pro
+       SIZE:                   3491 (Bytes)
+       LAST MODIFIED: Fri Jun 24 16:59:17 2011
+ROUTINE(7): analysis/g4_tracefov.pro
+       PATH: analysis/g4_tracefov.pro
+       SIZE:                   4160 (Bytes)
+       LAST MODIFIED: Fri Jun 24 16:59:17 2011
+ROUTINE(8): analysis/g4_calctheta.pro
+       PATH: analysis/g4_calctheta.pro
+       SIZE:                   2642 (Bytes)
+       LAST MODIFIED: Fri Jun 24 16:59:16 2011
+ROUTINE(9): analysis/g4_histangle.pro
+       PATH: analysis/g4_histangle.pro
+       SIZE:                   1564 (Bytes)
+       LAST MODIFIED: Fri Jun 24 16:59:16 2011
+COMPILED ROUTINES: $MAIN$ FINGERPRINT_PLOTFOVS LOAD_G4_LIB SEM2_LOADCT
+
+Log File (continued by ../fingerprint_plotfovs.pro):
+
+INPUT DATA (source files): 
+{ g4_data/binary/ptel_p10.0keV_3389440.bin
+g4_data/binary/ptel_p100.0keV_3389441.bin
+g4_data/binary/ptel_p1.0MeV_3389442.bin g4_data/binary/ptel_p9.0MeV_3401081.bin
+g4_data/binary/ptel_p10.0MeV_3389443.bin
+g4_data/binary/ptel_e10.0keV_3389430.bin
+g4_data/binary/ptel_e40.0keV_3407990.bin
+g4_data/binary/ptel_e60.0keV_3407991.bin
+g4_data/binary/ptel_e80.0keV_3408604.bin
+g4_data/binary/ptel_e100.0keV_3389434.bin
+g4_data/binary/ptel_e400.0keV_3389435.bin
+g4_data/binary/ptel_e700.0keV_3389436.bin
+g4_data/binary/ptel_e1.0MeV_3389437.bin g4_data/binary/ptel_e4.0MeV_3389438.bin
+g4_data/binary/ptel_e7.0MeV_3389439.bin
+      -1
+MEPED Proton Telescope       1}
+{ g4_data/binary/etel_p10.0keV_10376.bin g4_data/binary/etel_p100.0keV_10377.bin
+g4_data/binary/etel_p1.0MeV_10378.bin
+g4_data/binary/etel_e10.0keV_10383.bin g4_data/binary/etel_e100.0keV_10379.bin
+g4_data/binary/etel_e1.0MeV_10380.bin g4_data/binary/etel_e4.0MeV_10381.bin
+g4_data/binary/etel_e7.0MeV_10382.bin
+      -1
+MEPED Electron Telescope       2}
+
+Compiled Routines: $MAIN$ BINREAD FINGERPRINT_PLOTFOVS LOADCT LOAD_G4_LIB SEM2_LOADCT
